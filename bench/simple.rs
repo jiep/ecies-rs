@@ -1,7 +1,7 @@
 use core::time::Duration;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use ecies::{decrypt, encrypt, utils::generate_keypair};
+use pke_ecies::{decrypt, encrypt, utils::generate_keypair};
 
 const BIG_MSG_SIZE: usize = 100 * 1024 * 1024;
 const BIGGER_MSG_SIZE: usize = 200 * 1024 * 1024;
