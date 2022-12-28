@@ -1,5 +1,5 @@
 [package]
-name = "ecies"
+name = "pke_ecies"
 version = "0.2.4"
 # docs
 authors = ["Weiliang Li <to.be.impressive@gmail.com>"]
