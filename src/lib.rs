@@ -64,7 +64,7 @@ mod openssl_aes;
 #[cfg(feature = "pure")]
 mod pure_aes;
 
-use utils::{aes_decrypt, aes_encrypt, decapsulate, encapsulate, generate_keypair};
+use utils::{aes_decrypt, aes_encrypt, decapsulate, encapsulate};
 
 /// Encrypt a message by a public key
 ///
@@ -72,9 +72,9 @@ use utils::{aes_decrypt, aes_encrypt, decapsulate, encapsulate, generate_keypair
 ///
 /// * `receiver_pub` - The u8 array reference of a receiver's public key
 /// * `msg` - The u8 array reference of the message to encrypt
-pub fn encrypt(receiver_pub: &[u8], msg: &[u8]) -> Result<Vec<u8>, SecpError> {
+pub fn encrypt(receiver_pub: &[u8], msg: &[u8], r: &(SecretKey, PublicKey)) -> Result<Vec<u8>, SecpError> {
     let receiver_pk = PublicKey::parse_slice(receiver_pub, None)?;
-    let (ephemeral_sk, ephemeral_pk) = generate_keypair();
+    let (ephemeral_sk, ephemeral_pk) = r;
 
     let aes_key = encapsulate(&ephemeral_sk, &receiver_pk)?;
     let encrypted = aes_encrypt(&aes_key, msg).ok_or(SecpError::InvalidMessage)?;
@@ -120,12 +120,12 @@ mod tests {
 
     pub(super) fn test_enc_dec(sk: &[u8], pk: &[u8]) {
         let msg = MSG.as_bytes();
-        assert_eq!(msg, decrypt(sk, &encrypt(pk, msg).unwrap()).unwrap().as_slice());
+        assert_eq!(msg, decrypt(sk, &encrypt(pk, msg, &generate_keypair()).unwrap()).unwrap().as_slice());
     }
 
     pub(super) fn test_enc_dec_big(sk: &[u8], pk: &[u8]) {
         let msg = &BIG_MSG;
-        assert_eq!(msg.to_vec(), decrypt(sk, &encrypt(pk, msg).unwrap()).unwrap());
+        assert_eq!(msg.to_vec(), decrypt(sk, &encrypt(pk, msg, &generate_keypair()).unwrap()).unwrap());
     }
 
     #[test]
@@ -137,7 +137,7 @@ mod tests {
         assert_eq!(
             decrypt(
                 &sk2.serialize(),
-                encrypt(&pk1.serialize_compressed(), b"text").unwrap().as_slice()
+                encrypt(&pk1.serialize_compressed(), b"text", &generate_keypair()).unwrap().as_slice()
             ),
             Err(SecpError::InvalidMessage)
         );
@@ -154,7 +154,7 @@ mod tests {
 
     #[test]
     fn attempts_to_encrypt_with_invalid_key() {
-        assert_eq!(encrypt(&[0u8; 33], b"text"), Err(SecpError::InvalidPublicKey));
+        assert_eq!(encrypt(&[0u8; 33], b"text", &generate_keypair()), Err(SecpError::InvalidPublicKey));
     }
 
     #[test]
@@ -213,7 +213,7 @@ mod tests {
         let local_decrypted = decrypt(&sk.serialize(), server_encrypted.as_slice()).unwrap();
         assert_eq!(local_decrypted, MSG.as_bytes());
 
-        let local_encrypted = encrypt(uncompressed_pk, MSG.as_bytes()).unwrap();
+        let local_encrypted = encrypt(uncompressed_pk, MSG.as_bytes(), &generate_keypair()).unwrap();
         let params = [("data", encode(local_encrypted)), ("prv", sk_hex)];
 
         let res = rt

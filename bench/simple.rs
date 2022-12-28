@@ -14,13 +14,13 @@ fn criterion_benchmark(c: &mut Criterion) {
     let (sk, pk) = (&sk.serialize(), &pk.serialize());
 
     let big = &BIG_MSG;
-    let big_encrypted = &encrypt(pk, big).unwrap();
+    let big_encrypted = &encrypt(pk, big, &generate_keypair()).unwrap();
 
     let bigger = &BIGGER_MSG;
-    let bigger_encrypted = &encrypt(pk, bigger).unwrap();
+    let bigger_encrypted = &encrypt(pk, bigger, &generate_keypair()).unwrap();
 
-    c.bench_function("encrypt 100M", |b| b.iter(|| encrypt(pk, big).unwrap()));
-    c.bench_function("encrypt 200M", |b| b.iter(|| encrypt(pk, bigger).unwrap()));
+    c.bench_function("encrypt 100M", |b| b.iter(|| encrypt(pk, big, &generate_keypair()).unwrap()));
+    c.bench_function("encrypt 200M", |b| b.iter(|| encrypt(pk, bigger, &generate_keypair()).unwrap()));
     c.bench_function("decrypt 100M", |b| b.iter(|| decrypt(sk, big_encrypted).unwrap()));
     c.bench_function("decrypt 200M", |b| b.iter(|| decrypt(sk, bigger_encrypted).unwrap()));
 }
