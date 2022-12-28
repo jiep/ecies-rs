@@ -76,10 +76,10 @@ pub fn encrypt(receiver_pub: &[u8], msg: &[u8], r: &(SecretKey, PublicKey)) -> R
     let receiver_pk = PublicKey::parse_slice(receiver_pub, None)?;
     let (ephemeral_sk, ephemeral_pk) = r;
     let iv = ephemeral_sk.serialize();
-    let iv = iv.as_slice();
+    let iv = &iv[0..12];
 
     let aes_key = encapsulate(&ephemeral_sk, &receiver_pk)?;
-    let encrypted = aes_encrypt(&aes_key, msg, iv).ok_or(SecpError::InvalidMessage)?;
+    let encrypted = aes_encrypt(&aes_key, msg, &iv).ok_or(SecpError::InvalidMessage)?;
 
     let mut cipher_text = Vec::with_capacity(FULL_PUBLIC_KEY_SIZE + encrypted.len());
     cipher_text.extend(ephemeral_pk.serialize().iter());
