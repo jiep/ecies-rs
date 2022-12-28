@@ -9,12 +9,9 @@ use crate::consts::{AES_IV_LENGTH, AES_IV_PLUS_TAG_LENGTH, EMPTY_BYTES};
 pub type Aes256Gcm = AesGcm<Aes256, U16>;
 
 /// AES-256-GCM encryption wrapper
-pub fn aes_encrypt(key: &[u8], msg: &[u8]) -> Option<Vec<u8>> {
+pub fn aes_encrypt(key: &[u8], msg: &[u8], iv: &[u8]) -> Option<Vec<u8>> {
     let key = GenericArray::from_slice(key);
     let aead = Aes256Gcm::new(key);
-
-    let mut iv = [0u8; AES_IV_LENGTH];
-    thread_rng().fill(&mut iv);
 
     let nonce = GenericArray::from_slice(&iv);
 
@@ -23,7 +20,7 @@ pub fn aes_encrypt(key: &[u8], msg: &[u8]) -> Option<Vec<u8>> {
 
     if let Ok(tag) = aead.encrypt_in_place_detached(nonce, &EMPTY_BYTES, &mut out) {
         let mut output = Vec::with_capacity(AES_IV_PLUS_TAG_LENGTH + msg.len());
-        output.extend(&iv);
+        output.extend(iv);
         output.extend(tag);
         output.extend(out);
         Some(output)
