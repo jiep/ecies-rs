@@ -105,7 +105,7 @@ pub(crate) mod tests {
 
         assert_eq!(
             text,
-            aes_decrypt(&key, aes_encrypt(&key, text, &key).unwrap().as_slice())
+            aes_decrypt(&key, aes_encrypt(&key, text, &[0_u8; 16]).unwrap().as_slice())
                 .unwrap()
                 .as_slice()
         );
@@ -113,7 +113,7 @@ pub(crate) mod tests {
         let utf8_text = "😀😀😀😀".as_bytes();
         assert_eq!(
             utf8_text,
-            aes_decrypt(&key, aes_encrypt(&key, utf8_text, &key).unwrap().as_slice())
+            aes_decrypt(&key, aes_encrypt(&key, utf8_text, &[0_u8; 16]).unwrap().as_slice())
                 .unwrap()
                 .as_slice()
         );

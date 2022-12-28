@@ -50,6 +50,7 @@
 //!
 //! It's also possible to build to the `wasm32-unknown-unknown` target with the pure Rust backend. Check out [this repo](https://github.com/ecies/rs-wasm) for more details.
 
+use consts::AES_IV_LENGTH;
 pub use libsecp256k1::{util::FULL_PUBLIC_KEY_SIZE, Error as SecpError, PublicKey, SecretKey};
 
 /// Constant variables
@@ -75,8 +76,8 @@ use utils::{aes_decrypt, aes_encrypt, decapsulate, encapsulate};
 pub fn encrypt(receiver_pub: &[u8], msg: &[u8], r: &(SecretKey, PublicKey)) -> Result<Vec<u8>, SecpError> {
     let receiver_pk = PublicKey::parse_slice(receiver_pub, None)?;
     let (ephemeral_sk, ephemeral_pk) = r;
-    let iv = ephemeral_sk.serialize();
-    let iv = &iv[0..12];
+    let iv = ephemeral_pk.serialize();
+    let iv = &iv[..AES_IV_LENGTH];
 
     let aes_key = encapsulate(&ephemeral_sk, &receiver_pk)?;
     let encrypted = aes_encrypt(&aes_key, msg, &iv).ok_or(SecpError::InvalidMessage)?;
