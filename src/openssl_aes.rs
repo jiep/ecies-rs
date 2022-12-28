@@ -1,20 +1,16 @@
 use openssl::symm::{decrypt_aead, encrypt_aead, Cipher};
-use rand::{thread_rng, Rng};
 
 use crate::consts::{AES_IV_LENGTH, AES_IV_PLUS_TAG_LENGTH, AES_TAG_LENGTH, EMPTY_BYTES};
 
 /// AES-256-GCM encryption wrapper
-pub fn aes_encrypt(key: &[u8], msg: &[u8]) -> Option<Vec<u8>> {
+pub fn aes_encrypt(key: &[u8], msg: &[u8], iv: &[u8]) -> Option<Vec<u8>> {
     let cipher = Cipher::aes_256_gcm();
-
-    let mut iv = [0u8; AES_IV_LENGTH];
-    thread_rng().fill(&mut iv);
 
     let mut tag = [0u8; AES_TAG_LENGTH];
 
     if let Ok(encrypted) = encrypt_aead(cipher, key, Some(&iv), &EMPTY_BYTES, msg, &mut tag) {
         let mut output = Vec::with_capacity(AES_IV_PLUS_TAG_LENGTH + encrypted.len());
-        output.extend(&iv);
+        output.extend(iv);
         output.extend(&tag);
         output.extend(encrypted);
 
